@@ -1,101 +1,166 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { Plus, Mic, Bike, Book, Brain, Pen, Lightbulb } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Calendar } from "@/components/calendar";
+import { EntriesPanel } from "@/components/entries-panel";
+import RecordingModal from "@/components/recording-modal";
+import { Goal, Entry, initialGoals, initialEntries } from "@/app/data/initial-data";
+
+export default function JournalApp() {
+  const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [goals, setGoals] = useState<Goal[]>(initialGoals);
+  const [entries, setEntries] = useState<Entry[]>(initialEntries);
+  const [latestEntry, setLatestEntry] = useState<Entry | null>(null);
+
+  const handleAddGoal = () => {
+    const newGoalText = prompt("Enter a new goal:");
+    if (newGoalText) {
+      const newGoal: Goal = {
+        id: Date.now().toString(),
+        text: newGoalText,
+      };
+      setGoals([...goals, newGoal]);
+    }
+  };
+
+  const handleEditEntry = (entry: Entry) => {
+    // setEditingEntry(entry);
+    setIsRecording(true);
+  };
+
+  const filteredEntries = selectedGoal
+    ? entries
+        .filter((entry) => entry.goalId === selectedGoal.id)
+        .reverse()
+    : [];
+
+  const getIconForSummary = (summary: string) => {
+    if (
+      summary.toLowerCase().includes("bike") ||
+      summary.toLowerCase().includes("exercise")
+    )
+      return <Bike className="w-5 h-5 mr-2 text-white bg-white fill-white" />;
+    if (summary.toLowerCase().includes("read"))
+      return <Book className="w-5 h-5 mr-2 text-white" />;
+    if (summary.toLowerCase().includes("meditate"))
+      return <Brain className="w-5 h-5 mr-2" />;
+    if (
+      summary.toLowerCase().includes("write") ||
+      summary.toLowerCase().includes("journal")
+    )
+      return <Pen className="w-5 h-5 mr-2" />;
+    return <Lightbulb className="w-5 h-5 mr-2" />;
+  };
+
+  const getEntriesForGoal = (goalId: string) => {
+    return entries
+      .filter(entry => entry.goalId === goalId)
+      .map(entry => entry.date);
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="flex flex-col h-screen bg-background text-foreground">
+      <header className="p-4 bg-primary text-primary-foreground">
+        <h1 className="text-2xl font-bold">Journal App</h1>
+      </header>
+      <main className="flex-1 p-4 overflow-hidden relative bg-gray-900 text-gray-200">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-blue-300">Goals</h2>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700"
+            onClick={handleAddGoal}
           >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <Plus className="h-4 w-4" />
+            <span className="sr-only">Add Custom Goal</span>
+          </Button>
         </div>
+        <ScrollArea className="h-[calc(100vh-10rem)]">
+          <div className="grid gap-4">
+            {goals.map((goal) => (
+              <Card
+                key={goal.id}
+                className={`cursor-pointer transition-colors shadow-none ${
+                  selectedGoal?.id === goal.id ? "bg-gray-700" : "bg-gray-800"
+                }`}
+                onClick={() => setSelectedGoal(goal)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="font-medium text-gray-100">{goal.text}</p>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="bg-gray-700 text-gray-200 hover:bg-gray-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedGoal(goal);
+                        setIsRecording(true);
+                      }}
+                    >
+                      <Mic className="h-4 w-4" />
+                      <span>{entries.filter(entry => entry.goalId === goal.id).length} entries</span>
+                    </Button>
+                  </div>
+                  <div className="w-full">
+                    <Calendar entries={selectedGoal ? getEntriesForGoal(goal.id) : []} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </ScrollArea>
+        {latestEntry && (
+          <Card className="mt-4 bg-gray-800 shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center mb-2">
+                {getIconForSummary(latestEntry.summary)}
+                <h3 className="text-lg font-semibold text-gray-100">
+                  Latest Entry
+                </h3>
+              </div>
+              <p className="text-sm text-gray-300 mb-2">
+                {latestEntry.summary}
+              </p>
+              <p className="text-xs text-gray-400">{latestEntry.text}</p>
+            </CardContent>
+          </Card>
+        )}
+        <EntriesPanel
+          entries={filteredEntries}
+          isOpen={!!selectedGoal}
+          goalName={selectedGoal?.text || ""}
+          onClose={() => setSelectedGoal(null)}
+          onEditEntry={handleEditEntry}
+        />
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      <RecordingModal
+        isOpen={isRecording}
+        onClose={() => {
+          setIsRecording(false);
+          setEditingEntry(null);
+        }}
+        goal={selectedGoal}
+        onEntryComplete={(newEntry) => {
+          const today = new Date().toISOString().split("T")[0];
+          const fullNewEntry: Entry = {
+            id: Date.now().toString(),
+            date: today,
+            ...newEntry,
+          };
+          setEntries([...entries, fullNewEntry]);
+          setLatestEntry(fullNewEntry);
+          setIsRecording(false);
+          setEditingEntry(null);
+        }}
+      />
     </div>
   );
 }
