@@ -1,8 +1,9 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Bike, Book, Brain, Pen, Lightbulb, Edit } from 'lucide-react'
+import { X, Bike, Book, Brain, Pen, Lightbulb, Edit, ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
+import { AudioRecorder } from '@/components/audio-recorder'
 
 interface Entry {
   id?: string;
@@ -47,20 +48,20 @@ export function EntriesPanel({ entries, isOpen, goalName, onClose, onEditEntry }
 
   return (
     <div 
-      className={`fixed bottom-0 left-0 right-0 bg-gray-800 transition-transform duration-300 ease-in-out transform ${
+      className={`fixed inset-0 bg-gray-800 transition-transform duration-300 ease-in-out transform ${
         isOpen ? 'translate-y-0' : 'translate-y-full'
       }`}
-      style={{ height: 'calc(100vh - 12rem)' }}
+      style={{ height: '100vh' }}
     >
-      <Card className="w-full h-full rounded-t-lg bg-gray-800 ">
-        <CardHeader className="flex flex-row items-center justify-between ">
-          <CardTitle className="text-gray-100">{goalName}</CardTitle>
-          <Button variant="ghost" size="icon" onClick={onClose}>
-            <X className="h-4 w-4 text-gray-400" />
+      <Card className="w-full h-full rounded-none bg-gray-800">
+        <CardHeader className="flex flex-row items-center">
+          <Button variant="ghost" size="icon" onClick={onClose} className="hover:bg-gray-600">
+            <ArrowLeft className="h-5 w-5 text-gray-400" />
           </Button>
+          <CardTitle style={{marginTop: "0 !important"}} className="text-gray-100 ml-2 mt-0 leading-10">{goalName}</CardTitle>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="h-[calc(100vh-16rem)]">
+          <ScrollArea className="h-full">
             {entries.length > 0 ? (
               entries.map((entry) => (
                 <Card key={entry.id} className="mb-4 bg-gray-700">
@@ -114,12 +115,23 @@ const EditingPanel = ({ entry, onSave, onClose }: { entry: Entry | null, onSave:
         onChange={(e) => onSave({ ...entry, summary: e.target.value })}
         className="w-full mb-2 p-2 border border-gray-700 rounded bg-gray-800 text-gray-100 focus:outline-none focus:border-blue-500"
       />
-      <textarea
-        value={entry.text}
-        onChange={(e) => onSave({ ...entry, text: e.target.value })}
-        className="w-full p-2 border border-gray-700 rounded bg-gray-800 text-gray-100 focus:outline-none focus:border-blue-500"
-        rows={3}
-      />
+      <div className="flex items-center gap-2 mb-2">
+        <textarea
+          value={entry.text}
+          onChange={(e) => onSave({ ...entry, text: e.target.value })}
+          className="flex-grow p-2 border border-gray-700 rounded bg-gray-800 text-gray-100 focus:outline-none focus:border-blue-500"
+          rows={3}
+        />
+        <AudioRecorder 
+          onTranscription={(text, summary) => {
+            onSave({ 
+              ...entry, 
+              text: entry.text ? `${entry.text}\n\n${text}` : text,
+            })
+          }}
+          isEditing={true}
+        />
+      </div>
       <div className="flex justify-end mt-2">
         <Button variant="outline" size="sm" onClick={onClose} className="mr-2 border-gray-600 bg-gray-800 hover:text-gray-200 text-gray-300 hover:bg-gray-800">
           Cancel
