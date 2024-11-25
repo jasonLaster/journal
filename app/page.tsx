@@ -28,8 +28,7 @@ export default function JournalApp() {
     }
   };
 
-  const handleEditEntry = (entry: Entry) => {
-    // setEditingEntry(entry);
+  const handleEditEntry = () => {
     setIsRecording(true);
   };
 
@@ -145,7 +144,6 @@ export default function JournalApp() {
         isOpen={isRecording}
         onClose={() => {
           setIsRecording(false);
-          setEditingEntry(null);
         }}
         goal={selectedGoal}
         onEntryComplete={(newEntry) => {
@@ -158,7 +156,6 @@ export default function JournalApp() {
           setEntries([...entries, fullNewEntry]);
           setLatestEntry(fullNewEntry);
           setIsRecording(false);
-          setEditingEntry(null);
         }}
       />
     </div>

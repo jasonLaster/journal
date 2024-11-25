@@ -55,7 +55,9 @@ export function AudioRecorder({ onTranscription, isEditing }: AudioRecorderProps
     try {
       const audioBlob = await stopRecording()
       const formData = new FormData()
-      formData.append('audio', audioBlob)
+      if (audioBlob) {
+        formData.append('audio', audioBlob)
+      }
 
       const response = await fetch('/api/transcribe', {
         method: 'POST',

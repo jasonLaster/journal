@@ -1,7 +1,7 @@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { X, Bike, Book, Brain, Pen, Lightbulb, Edit, ArrowLeft } from 'lucide-react'
+import { Bike, Book, Brain, Pen, Lightbulb, Edit, ArrowLeft } from 'lucide-react'
 import { useState } from 'react'
 import { AudioRecorder } from '@/components/audio-recorder'
 
@@ -10,6 +10,8 @@ interface Entry {
   date?: string;
   text?: string;
   summary?: string;
+  title?: string;
+  content?: string;
 }
 
 interface EntriesPanelProps {
@@ -22,8 +24,7 @@ interface EntriesPanelProps {
 
 export function EntriesPanel({ entries, isOpen, goalName, onClose, onEditEntry }: EntriesPanelProps) {
   const [expandedEntryId, setExpandedEntryId] = useState<string | null>(null)
-  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
-  const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<Entry | null>(null)
 
   const getRelativeDate = (date: string) => {
     const now = new Date()
@@ -63,23 +64,36 @@ export function EntriesPanel({ entries, isOpen, goalName, onClose, onEditEntry }
         <CardContent>
           <ScrollArea className="h-full">
             {entries.length > 0 ? (
-              entries.map((entry) => (
-                <Card key={entry.id} className="mb-4 bg-gray-700">
+              entries.map(({ id, summary: title, text: content, date }) => (
+                <Card key={id} className="mb-4 bg-gray-700">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center flex-grow cursor-pointer" onClick={() => setExpandedEntryId(expandedEntryId === entry.id ? null : entry.id)}>
-                        {getIconForSummary(entry.summary)}
-                        <p className="text-sm text-gray-200">{entry.summary}</p>
+                      <div 
+                        className="flex items-center flex-grow cursor-pointer" 
+                        onClick={() => setExpandedEntryId(id ? (expandedEntryId === id ? null : id) : null)}
+                      >
+                        {getIconForSummary(title || '')}
+                        <p className="text-sm text-gray-200">{title}</p>
                       </div>
                       <div className="flex items-center">
-                        <p className="text-sm text-gray-400 mr-2">{getRelativeDate(entry.date)}</p>
-                        <Button variant="ghost" size="icon" onClick={() => setEditingEntry(entry)} className="hover:bg-gray-600">
+                        <p className="text-sm text-gray-400 mr-2">{date ? getRelativeDate(date) : ''}</p>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => setSelectedEntry({ 
+                            id, 
+                            summary: title, 
+                            text: content, 
+                            date 
+                          })} 
+                          className="hover:bg-gray-600"
+                        >
                           <Edit className="h-4 w-4 text-gray-400" />
                         </Button>
                       </div>
                     </div>
-                    {expandedEntryId === entry.id && (
-                      <p className="text-sm mt-2 text-gray-300">{entry.text}</p>
+                    {expandedEntryId === id && (
+                      <p className="text-sm mt-2 text-gray-300">{content}</p>
                     )}
                   </CardContent>
                 </Card>
@@ -91,12 +105,12 @@ export function EntriesPanel({ entries, isOpen, goalName, onClose, onEditEntry }
         </CardContent>
       </Card>
       <EditingPanel
-        entry={editingEntry}
+        entry={selectedEntry}
         onSave={(updatedEntry) => {
           onEditEntry(updatedEntry);
-          setEditingEntry(null);
+          setSelectedEntry(null);
         }}
-        onClose={() => setEditingEntry(null)}
+        onClose={() => setSelectedEntry(null)}
       />
     </div>
   )
@@ -122,15 +136,7 @@ const EditingPanel = ({ entry, onSave, onClose }: { entry: Entry | null, onSave:
           className="flex-grow p-2 border border-gray-700 rounded bg-gray-800 text-gray-100 focus:outline-none focus:border-blue-500"
           rows={3}
         />
-        <AudioRecorder 
-          onTranscription={(text, summary) => {
-            onSave({ 
-              ...entry, 
-              text: entry.text ? `${entry.text}\n\n${text}` : text,
-            })
-          }}
-          isEditing={true}
-        />
+
       </div>
       <div className="flex justify-end mt-2">
         <Button variant="outline" size="sm" onClick={onClose} className="mr-2 border-gray-600 bg-gray-800 hover:text-gray-200 text-gray-300 hover:bg-gray-800">

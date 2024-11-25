@@ -23,7 +23,7 @@ async function generateSummary(text: string) {
     max_tokens: 20,
   })
 
-  return completion.choices[0].message.content.trim()
+  return completion?.choices[0]?.message?.content?.trim() || ''
 }
 
 export async function POST(request: Request) {
